@@ -102,7 +102,7 @@ var app = app || {};
       module.Book.find(book, bookView.initSearchResultsPage);
 
       // COMMENT: Why are these values set to an empty string?
-      //RESPONSE: These clear the search parameters. 
+      //RESPONSE: These clear the search parameters after in runs the initSearchResultsPage function. 
       event.target.title.value = '';
       event.target.author.value = '';
       event.target.isbn.value = '';
@@ -117,10 +117,14 @@ var app = app || {};
     $('#search-list').empty();
 
     // COMMENT: Explain how the .forEach() method is being used below.
+    //RESPONSE: The forEach() method by taking all the elements of Book.all (which is currently our search results)and appends them to the search list which we just cleared on the previous line. 
     module.Book.all.forEach(book => $('#search-list').append(book.toHtml()));
+
     $('.detail-button a').text('Add to list').attr('href', '/');
+
     $('.detail-button').on('click', function(e) {
       // COMMENT: Explain the following line of code.
+      // RESPONSE: The "detail-button", once clicked, invokes a event handler of the selected book instance and traverses up the DOM 3 parents to the li data-bookid which contains the specific book_id selected. 
       module.Book.findOne($(this).parent().parent().parent().data('bookid'))
     });
   }

@@ -5,6 +5,7 @@ const express = require('express');
 const cors = require('cors');
 const pg = require('pg');
 const superagent = require('superagent');
+const bodyParser = require('body-parser');
 
 // Application Setup
 const app = express();
@@ -13,6 +14,7 @@ const CLIENT_URL = process.env.CLIENT_URL;
 const TOKEN = process.env.TOKEN;
 
 // COMMENT: Explain the following line of code. What is the API_KEY? Where did it come from?
+//RESPONSE: The API_KEY is the credentials that we set up at the Google's API Developer Console website. 
 const API_KEY = process.env.GOOGLE_API_KEY;
 
 // Database Setup
@@ -22,6 +24,8 @@ client.on('error', err => console.error(err));
 
 // Application Middleware
 app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // API Endpoints
 app.get('/api/v1/admin', (req, res) => res.send(TOKEN === parseInt(req.query.token)))
@@ -30,24 +34,29 @@ app.get('/api/v1/books/find', (req, res) => {
   let url = 'https://www.googleapis.com/books/v1/volumes';
 
   // COMMENT: Explain the following four lines of code. How is the query built out? What information will be used to create the query?
+  //RESPONSE: The query is a sting made up of the concatinated values from the following conditional statements. If a value is inputted, it will use that value to run the query. 
   let query = ''
   if(req.query.title) query += `+intitle:${req.query.title}`;
   if(req.query.author) query += `+inauthor:${req.query.author}`;
   if(req.query.isbn) query += `+isbn:${req.query.isbn}`;
 
   // COMMENT: What is superagent? How is it being used here? What other libraries are available that could be used for the same purpose?
+  // RESPONSE: It is the middleware that we utilize to verify and store our token so that is it not stored locally. Hashnode is another library that could be used. 
   superagent.get(url)
     .query({'q': query})
     .query({'key': API_KEY})
     .then(response => response.body.items.map((book, idx) => {
 
       // COMMENT: The line below is an example of destructuring. Explain destructuring in your own words.
+      //RESPONSE: We are taking an object and condensing down to one variable. 
       let { title, authors, industryIdentifiers, imageLinks, description } = book.volumeInfo;
 
       // COMMENT: What is the purpose of the following placeholder image?
+      //RESPONSE: If an image is not provided, this image will be placed as a default image. 
       let placeholderImage = 'http://www.newyorkpaddy.com/images/covers/NoCoverAvailable.jpg';
 
       // COMMENT: Explain how ternary operators are being used below.
+      //RESPONSE: If these values exists, return them, else, give default that equate to none available.
       return {
         title: title ? title : 'No title available',
         author: authors ? authors[0] : 'No authors available',
@@ -62,6 +71,7 @@ app.get('/api/v1/books/find', (req, res) => {
 })
 
 // COMMENT: How does this route differ from the route above? What does ':isbn' refer to in the code below?
+//RESPONSE: This is after a specific book was selected and it routed via its isbn. 
 app.get('/api/v1/books/find/:isbn', (req, res) => {
   let url = 'https://www.googleapis.com/books/v1/volumes';
   superagent.get(url)
@@ -95,7 +105,7 @@ app.get('/api/v1/books/:id', (req, res) => {
     .catch(console.error);
 });
 
-app.post('/api/v1/books', express.urlencoded(), (req, res) => {
+app.post('/api/v1/books', (req, res) => {
   let {title, author, isbn, image_url, description} = req.body;
   client.query(`
     INSERT INTO books(title, author, isbn, image_url, description) VALUES($1, $2, $3, $4, $5)`,
@@ -105,7 +115,7 @@ app.post('/api/v1/books', express.urlencoded(), (req, res) => {
   .catch(console.error);
 });
 
-app.put('/api/v1/books/:id', express.urlencoded(), (req, res) => {
+app.put('/api/v1/books/:id', (req, res) => {
   let {title, author, isbn, image_url, description} = req.body;
   client.query(`
     UPDATE books

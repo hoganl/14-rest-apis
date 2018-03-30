@@ -2,13 +2,6 @@
 
 var app = app || {};
 
-const ENV = {};
-
-ENV.isProduction = window.location.protocol === 'https:';
-ENV.productionApiUrl = 'insert cloud API server URL here';
-ENV.developmentApiUrl = 'insert local API server URL here';
-ENV.apiUrl = ENV.isProduction ? ENV.productionApiUrl : ENV.developmentApiUrl;
-
 (function (module) {
   const adminView = {};
 
@@ -21,6 +14,7 @@ ENV.apiUrl = ENV.isProduction ? ENV.productionApiUrl : ENV.developmentApiUrl;
       let token = event.target.passphrase.value;
 
       // COMMENT: Is the token cleared out of local storage? Do you agree or disagree with this structure?
+      //RESPONSE: The token is never stored to begin with. I do not agree with this structure. The below is stating that if there is a token in local storage, it will take you back to the home page, not to the add page.
       $.get(`${ENV.apiUrl}/api/v1/admin`, {token})
         .then(res => {
           localStorage.token = true;
